@@ -1,0 +1,7 @@
+# VULN-19: cố tình dùng phiên bản cũ có CVE đã biết
+Flask==2.0.1
+Werkzeug==2.0.3
+Jinja2==3.0.1
+itsdangerous==2.0.1
+MarkupSafe==2.0.1
+requests==2.25.0

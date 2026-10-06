@@ -1,0 +1,9 @@
+venv/
+.venv/
+__pycache__/
+*.pyc
+app.db
+uploads/
+.sonar-scan.log
+.scannerwork/
+.env.sonar

@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+# Chạy tự động sau `git pull` có merge/fast-forward.
+# Debug: chạy tay `bash -x .githooks/post-merge` (không cần pull), rồi xem .sonar-scan.log
+ROOT="$(git rev-parse --show-toplevel)"
+cd "$ROOT" || exit 0
+
+[ -f .env.sonar ] && set -a && . ./.env.sonar && set +a
+: "${SONAR_HOST_URL:=http://localhost:9000}"
+
+if [ -z "$SONAR_TOKEN" ]; then
+  echo "[DevSecOps] Thiếu SONAR_TOKEN (tạo file .env.sonar), bỏ qua quét."
+  exit 0
+fi
+
+LOG="$ROOT/.sonar-scan.log"
+echo "[DevSecOps] Pull xong, đang quét SonarQube ở nền... (log: .sonar-scan.log)"
+
+(
+  docker run --rm --network host \
+    -u "$(id -u):$(id -g)" \
+    -e SONAR_HOST_URL="$SONAR_HOST_URL" \
+    -e SONAR_TOKEN="$SONAR_TOKEN" \
+    -v "$ROOT:/usr/src" \
+    sonarsource/sonar-scanner-cli \
+    -Dsonar.qualitygate.wait=true
+  if [ $? -eq 0 ]; then
+    echo "[DevSecOps] QUALITY GATE: PASSED"
+  else
+    echo "[DevSecOps] QUALITY GATE: FAILED (hoặc lỗi quét) - xem $SONAR_HOST_URL/dashboard?id=devsecops-demo"
+  fi
+) > "$LOG" 2>&1 &
+
+exit 0
